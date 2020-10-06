@@ -165,6 +165,7 @@ class _MediaGridState extends State<MediaGrid> {
       _indexTest++;
       print('I loop $i');
       print('length ${_mediaList.length}');
+      print('match_image_branch');
 
       final newFile = await _mediaList[_indexTest].file;
       final visionImage = FirebaseVisionImage.fromFile(newFile);
