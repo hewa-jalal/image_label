@@ -114,18 +114,14 @@ class _MediaGridState extends State<MediaGrid> {
 
   void _fetchNewMedia() async {
     lastPage = currentPage;
-    List<AssetEntity> picAssets = [];
     var result = await PhotoManager.requestPermission();
     if (result) {
-      List<AssetPathEntity> albums =
-          await PhotoManager.getAssetPathList(onlyAll: true);
+      List<AssetPathEntity> albums = await PhotoManager.getAssetPathList(
+          onlyAll: true, type: RequestType.image);
       List<AssetEntity> media = await albums[0].getAssetListPaged(0, 10000);
 
       List<Widget> temp = [];
       for (int i = 0; i < media.length - 1; i++) {
-        if (media[i].type == AssetType.image) {
-          picAssets.add(media[i]);
-        }
         var asset = media[i];
         temp.add(
           FutureBuilder(
@@ -151,7 +147,7 @@ class _MediaGridState extends State<MediaGrid> {
       }
 
       setState(() {
-        _mediaList.addAll(picAssets);
+        _mediaList.addAll(media);
         _mediaListWidget.addAll(temp);
         // currentPage++;
       });
@@ -165,7 +161,6 @@ class _MediaGridState extends State<MediaGrid> {
       _indexTest++;
       print('I loop $i');
       print('length ${_mediaList.length}');
-      print('match_image_branch');
 
       final newFile = await _mediaList[_indexTest].file;
       final visionImage = FirebaseVisionImage.fromFile(newFile);
