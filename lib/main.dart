@@ -1,7 +1,9 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 import 'package:flutter/material.dart';
+import 'package:image_label/models/photo_label.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:photo_manager/photo_manager.dart';
 
@@ -98,12 +100,13 @@ class MediaGrid extends StatefulWidget {
 class _MediaGridState extends State<MediaGrid> {
   List<Widget> _mediaListWidget = [];
   List<AssetEntity> _mediaList = [];
+  List<PhotoLabel> _photoLabelsList = [];
   var _indexTest = 0;
-  int currentPage = 0;
-  int lastPage = 1;
 
   bool imageLoaded = false;
   File pickedImage;
+  var displayFile;
+
   var text = '';
 
   @override
@@ -113,7 +116,6 @@ class _MediaGridState extends State<MediaGrid> {
   }
 
   void _fetchNewMedia() async {
-    lastPage = currentPage;
     var result = await PhotoManager.requestPermission();
     if (result) {
       List<AssetPathEntity> albums = await PhotoManager.getAssetPathList(
@@ -121,18 +123,23 @@ class _MediaGridState extends State<MediaGrid> {
       List<AssetEntity> media = await albums[0].getAssetListPaged(0, 10000);
 
       List<Widget> temp = [];
-      for (int i = 0; i < media.length - 1; i++) {
+      for (int i = 0; i < media.length; i++) {
         var asset = media[i];
         temp.add(
-          FutureBuilder(
+          FutureBuilder<Uint8List>(
             future: asset.thumbDataWithSize(200, 200),
-            builder: (BuildContext context, snapshot) {
+            builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.done)
                 return Column(
                   children: <Widget>[
-                    Text(i.toString(),
-                        style: TextStyle(color: Colors.red, fontSize: 20)),
-                    Positioned.fill(
+                    // Text(
+                    //   i.toString(),
+                    //   style: TextStyle(
+                    //     color: Colors.red,
+                    //     fontSize: 20,
+                    //   ),
+                    // ),
+                    Expanded(
                       child: Image.memory(
                         snapshot.data,
                         fit: BoxFit.cover,
@@ -149,7 +156,6 @@ class _MediaGridState extends State<MediaGrid> {
       setState(() {
         _mediaList.addAll(media);
         _mediaListWidget.addAll(temp);
-        // currentPage++;
       });
     } else {
       PhotoManager.openSetting();
@@ -157,12 +163,10 @@ class _MediaGridState extends State<MediaGrid> {
   }
 
   Future pickImage() async {
-    for (int i = 0; i < _mediaList.length - 1; i++) {
-      _indexTest++;
-      print('I loop $i');
-      print('length ${_mediaList.length}');
+    for (int i = 0; i < _mediaList.length; i++) {
+      // _indexTest++;
 
-      final newFile = await _mediaList[_indexTest].file;
+      final newFile = await _mediaList[i].file;
       final visionImage = FirebaseVisionImage.fromFile(newFile);
       final labeler = FirebaseVision.instance.imageLabeler();
 
@@ -171,9 +175,20 @@ class _MediaGridState extends State<MediaGrid> {
         // final confidence = label.confidence;
         setState(() => text = "$text ${label.text} ");
       }
-
+      _photoLabelsList.add(PhotoLabel(text, _mediaList[i], newFile));
+      text = '';
       labeler.close();
     }
+  }
+
+  File matchLabelToText() {
+    for (var labelImage in _photoLabelsList) {
+      var splitLabel = labelImage.label.split(' ');
+      if (splitLabel.contains('Chair')) {
+        return labelImage.photoFile;
+      }
+    }
+    return File(null);
   }
 
   @override
@@ -186,12 +201,13 @@ class _MediaGridState extends State<MediaGrid> {
               onPressed: pickImage,
               child: Text('Pick image'),
             ),
-            SizedBox(
-              height: 200,
-              child: SingleChildScrollView(
-                child: Text(text),
-              ),
-            ),
+            // SizedBox(
+            //   height: 100,
+            //   child: SingleChildScrollView(
+            //     child: Text(text),
+            //   ),
+            // ),
+            SizedBox(height: 20),
             Expanded(
               child: GridView.builder(
                   itemCount: _mediaList.length,
@@ -202,6 +218,44 @@ class _MediaGridState extends State<MediaGrid> {
                     return _mediaListWidget[index];
                   }),
             ),
+            SizedBox(height: 20),
+            _photoLabelsList.length != 0
+                ? Expanded(
+                    child: ListView(
+                      children: [
+                        Image.file(
+                          _photoLabelsList[0].photoFile,
+                          width: 100,
+                          height: 100,
+                        ),
+                        Text(_photoLabelsList[1].label),
+                        Center(
+                          child: InkWell(
+                            onTap: () {
+                              setState(() {
+                                displayFile = matchLabelToText();
+                              });
+
+                              print('displayFile $displayFile');
+                            },
+                            child: Text(
+                              'photo label length ${_photoLabelsList.length}',
+                            ),
+                          ),
+                        ),
+                        displayFile != null
+                            ? Expanded(
+                                child: Image.file(
+                                  displayFile,
+                                  width: 100,
+                                  height: 100,
+                                ),
+                              )
+                            : Container()
+                      ],
+                    ),
+                  )
+                : Container()
           ],
         ),
       ),
