@@ -3,9 +3,12 @@ import 'dart:typed_data';
 
 import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_label/models/photo_label.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:image_label/repository/image_label_repository.dart';
 import 'package:photo_manager/photo_manager.dart';
+
+import 'bloc/imagelabel_bloc.dart';
 
 void main() {
   runApp(MyApp());
@@ -14,79 +17,11 @@ void main() {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: MediaGrid(),
-    );
-  }
-}
-
-class HomePage extends StatefulWidget {
-  @override
-  _HomePageState createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> {
-  bool imageLoaded = false;
-  File pickedImage;
-  var text = '';
-
-  final _picker = ImagePicker();
-
-  Future pickImage() async {
-    text = '';
-    var awaitImage = await _picker.getImage(source: ImageSource.gallery);
-    setState(() {
-      pickedImage = File(awaitImage.path);
-      imageLoaded = true;
-    });
-    final visionImage = FirebaseVisionImage.fromFile(pickedImage);
-    final labeler = FirebaseVision.instance.imageLabeler();
-
-    final imageLabels = await labeler.processImage(visionImage);
-    for (final label in imageLabels) {
-      final confidence = label.confidence;
-      setState(() {
-        text = "$text ${label.text} ";
-
-        print(text);
-      });
-    }
-
-    labeler.close();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        body: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              ElevatedButton(
-                onPressed: pickImage,
-                child: Text('Pick image'),
-              ),
-              pickedImage != null
-                  ? Column(
-                      children: [
-                        Container(
-                          alignment: Alignment.center,
-                          height: MediaQuery.of(context).size.height / 1.5,
-                          child: Image.file(pickedImage),
-                        ),
-                        Text(
-                          text,
-                          style: TextStyle(fontSize: 20),
-                          textAlign: TextAlign.center,
-                        )
-                      ],
-                    )
-                  : Container(),
-            ],
-          ),
-        ),
+    return BlocProvider(
+      create: (_) => ImageLabelBloc(ImageLabelRepository()),
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: MediaGrid(),
       ),
     );
   }
@@ -112,7 +47,7 @@ class _MediaGridState extends State<MediaGrid> {
   @override
   void initState() {
     super.initState();
-    _fetchNewMedia();
+    // _fetchNewMedia();
   }
 
   void _fetchNewMedia() async {
@@ -193,13 +128,14 @@ class _MediaGridState extends State<MediaGrid> {
 
   @override
   Widget build(BuildContext context) {
+    final bloc = BlocProvider.of<ImageLabelBloc>(context);
     return SafeArea(
       child: Scaffold(
         body: Column(
           children: <Widget>[
             ElevatedButton(
-              onPressed: pickImage,
-              child: Text('Pick image'),
+              onPressed: () => bloc.add(LoadGallery()),
+              child: Text('Bloc test'),
             ),
             // SizedBox(
             //   height: 100,
@@ -208,15 +144,25 @@ class _MediaGridState extends State<MediaGrid> {
             //   ),
             // ),
             SizedBox(height: 20),
-            Expanded(
-              child: GridView.builder(
-                  itemCount: _mediaList.length,
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                  ),
-                  itemBuilder: (context, index) {
-                    return _mediaListWidget[index];
-                  }),
+            BlocBuilder<ImageLabelBloc, ImageLabelState>(
+              builder: (context, state) {
+                if (state is GalleryLoaded) {
+                  return Expanded(
+                    child: GridView.builder(
+                        itemCount: state.thumbDataList.length,
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3,
+                        ),
+                        itemBuilder: (context, index) {
+                          return Image.memory(
+                            state.thumbDataList[index],
+                            fit: BoxFit.cover,
+                          );
+                        }),
+                  );
+                }
+                return Container(color: Colors.red);
+              },
             ),
             SizedBox(height: 20),
             _photoLabelsList.length != 0
