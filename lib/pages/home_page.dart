@@ -25,13 +25,13 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final bloc = BlocProvider.of<ImageLabelBloc>(context);
+    final imageLabelBloc = BlocProvider.of<ImageLabelBloc>(context);
     return SafeArea(
       child: Scaffold(
         body: Column(
           children: <Widget>[
             ElevatedButton(
-              onPressed: () => bloc.add(LoadGallery()),
+              onPressed: () => imageLabelBloc.add(LoadGallery()),
               child: Text('Bloc test'),
             ),
             SizedBox(height: 20),
@@ -42,7 +42,7 @@ class _HomePageState extends State<HomePage> {
                     child: Column(
                       children: <Widget>[
                         ElevatedButton(
-                          onPressed: () => bloc.add(LabelImage()),
+                          onPressed: () => imageLabelBloc.add(LabelImage()),
                           child: Text('Label the images'),
                         ),
                         Expanded(
@@ -62,8 +62,25 @@ class _HomePageState extends State<HomePage> {
                       ],
                     ),
                   );
+                } else if (state is ImageLabeled) {
+                  return Expanded(
+                    child: ListView.builder(
+                      itemCount: state.photoLabelList.length,
+                      itemBuilder: (context, index) => Expanded(
+                        child: Column(
+                          children: <Widget>[
+                            Image.memory(
+                              state.photoLabelList[index].photoMemory,
+                              fit: BoxFit.cover,
+                            ),
+                            Text(state.photoLabelList[index].label),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
                 }
-                return Container(color: Colors.red);
+                return Center(child: FlutterLogo());
               },
             ),
             SizedBox(height: 20),

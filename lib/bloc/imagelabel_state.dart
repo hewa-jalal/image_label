@@ -17,9 +17,8 @@ class GalleryLoaded extends ImageLabelState {
 }
 
 class ImageLabeled extends ImageLabelState {
-  final String files;
-
-  ImageLabeled(this.files);
+  final List<PhotoLabel> photoLabelList;
+  ImageLabeled(this.photoLabelList);
   @override
-  List<Object> get props => [files];
+  List<Object> get props => [photoLabelList];
 }

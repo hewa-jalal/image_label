@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:image_label/models/photo_label.dart';
 import 'package:image_label/repository/image_label_repository.dart';
 import 'package:meta/meta.dart';
 
@@ -23,8 +24,8 @@ class ImageLabelBloc extends Bloc<ImageLabelEvent, ImageLabelState> {
       final List<Uint8List> list = await _imageLabelRepository.fetchNewMedia();
       yield (GalleryLoaded(list));
     } else if (event is LabelImage) {
-      final String text = await _imageLabelRepository.labelImage();
-      yield (ImageLabeled(text));
+      final photoLabelList = await _imageLabelRepository.labelImage();
+      yield (ImageLabeled(photoLabelList));
     }
   }
 }

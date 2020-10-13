@@ -8,8 +8,8 @@ import 'package:photo_manager/photo_manager.dart';
 class ImageLabelRepository {
   List<File> _files = [];
   List<PhotoLabel> _photoLabelsList = [];
+  List<Uint8List> _thumbDataList = [];
   Future<List<Uint8List>> fetchNewMedia() async {
-    List<Uint8List> thumbDataList = [];
     var result = await PhotoManager.requestPermission();
     if (result) {
       List<AssetPathEntity> albums = await PhotoManager.getAssetPathList(
@@ -18,24 +18,24 @@ class ImageLabelRepository {
       );
       List<AssetEntity> media = await albums[0].getAssetListPaged(0, 10000);
 
-      for (int i = 0; i < media.length; i++) {
+      for (int i = 0; i < media.length - 1; i++) {
         var asset = media[i];
         var file = await asset.file;
         var thumbData = await asset.thumbDataWithSize(200, 200);
-        thumbDataList.add(thumbData);
+        _thumbDataList.add(thumbData);
         _files.add(file);
       }
 
-      return thumbDataList;
+      return _thumbDataList;
     } else {
       PhotoManager.openSetting();
-      return thumbDataList;
+      return _thumbDataList;
     }
   }
 
-  Future<String> labelImage() async {
+  Future<List<PhotoLabel>> labelImage() async {
     var text = '';
-    for (int i = 0; i < _files.length - 1; i++) {
+    for (int i = 0; i < _files.length; i++) {
       final newFile = _files[i];
       final visionImage = FirebaseVisionImage.fromFile(newFile);
       final labeler = FirebaseVision.instance.imageLabeler();
@@ -45,10 +45,10 @@ class ImageLabelRepository {
         // final confidence = label.confidence;
         text = '$text ${label.text}';
       }
-      _photoLabelsList.add(PhotoLabel(text, _files[i]));
+      _photoLabelsList.add(PhotoLabel(text, _thumbDataList[i]));
       text = '';
       labeler.close();
     }
-    return text;
+    return _photoLabelsList;
   }
 }
