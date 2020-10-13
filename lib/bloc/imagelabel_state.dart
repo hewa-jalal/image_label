@@ -22,3 +22,11 @@ class ImageLabeled extends ImageLabelState {
   @override
   List<Object> get props => [photoLabelList];
 }
+
+class ImagePhotoLabelFound extends ImageLabelState {
+  final Uint8List uint8list;
+
+  ImagePhotoLabelFound(this.uint8list);
+  @override
+  List<Object> get props => [uint8list];
+}

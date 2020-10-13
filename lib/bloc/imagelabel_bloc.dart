@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 import 'package:image_label/models/photo_label.dart';
 import 'package:image_label/repository/image_label_repository.dart';
 import 'package:meta/meta.dart';
@@ -26,6 +27,9 @@ class ImageLabelBloc extends Bloc<ImageLabelEvent, ImageLabelState> {
     } else if (event is LabelImage) {
       final photoLabelList = await _imageLabelRepository.labelImage();
       yield (ImageLabeled(photoLabelList));
+    } else if (event is FindPhotoImageLabel) {
+      final uint8list = _imageLabelRepository.matchLabelToText();
+      yield (ImagePhotoLabelFound(uint8list));
     }
   }
 }

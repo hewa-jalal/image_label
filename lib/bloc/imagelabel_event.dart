@@ -12,3 +12,8 @@ class LabelImage extends ImageLabelEvent {
   @override
   List<Object> get props => [];
 }
+
+class FindPhotoImageLabel extends ImageLabelEvent {
+  @override
+  List<Object> get props => [];
+}

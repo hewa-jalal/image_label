@@ -13,28 +13,25 @@ class _HomePageState extends State<HomePage> {
 
   var text = '';
 
-  // File matchLabelToText() {
-  //   for (var labelImage in _photoLabelsList) {
-  //     var splitLabel = labelImage.label.split(' ');
-  //     if (splitLabel.contains('Chair')) {
-  //       return labelImage.photoFile;
-  //     }
-  //   }
-  //   return File(null);
-  // }
-
   @override
   Widget build(BuildContext context) {
     final imageLabelBloc = BlocProvider.of<ImageLabelBloc>(context);
     return SafeArea(
       child: Scaffold(
+        appBar: AppBar(
+          title: TextField(),
+        ),
         body: Column(
           children: <Widget>[
             ElevatedButton(
               onPressed: () => imageLabelBloc.add(LoadGallery()),
               child: Text('Bloc test'),
             ),
-            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () => imageLabelBloc.add(FindPhotoImageLabel()),
+              child: Text('find'),
+            ),
+            SizedBox(height: 10),
             BlocBuilder<ImageLabelBloc, ImageLabelState>(
               builder: (context, state) {
                 if (state is GalleryLoaded) {
@@ -79,6 +76,8 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                   );
+                } else if (state is ImagePhotoLabelFound) {
+                  return Image.memory(state.uint8list);
                 }
                 return Center(child: FlutterLogo());
               },

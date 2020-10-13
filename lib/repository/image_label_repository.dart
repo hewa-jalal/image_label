@@ -9,6 +9,7 @@ class ImageLabelRepository {
   List<File> _files = [];
   List<PhotoLabel> _photoLabelsList = [];
   List<Uint8List> _thumbDataList = [];
+
   Future<List<Uint8List>> fetchNewMedia() async {
     var result = await PhotoManager.requestPermission();
     if (result) {
@@ -50,5 +51,15 @@ class ImageLabelRepository {
       labeler.close();
     }
     return _photoLabelsList;
+  }
+
+  Uint8List matchLabelToText() {
+    for (var labelImage in _photoLabelsList) {
+      var splitLabel = labelImage.label.split(' ');
+      if (splitLabel.contains('Food')) {
+        return labelImage.photoMemory;
+      }
+    }
+    return null;
   }
 }
