@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:bloc/bloc.dart';
@@ -21,6 +22,9 @@ class ImageLabelBloc extends Bloc<ImageLabelEvent, ImageLabelState> {
     if (event is LoadGallery) {
       final List<Uint8List> list = await _imageLabelRepository.fetchNewMedia();
       yield (GalleryLoaded(list));
+    } else if (event is LabelImage) {
+      final String text = await _imageLabelRepository.labelImage();
+      yield (ImageLabeled(text));
     }
   }
 }

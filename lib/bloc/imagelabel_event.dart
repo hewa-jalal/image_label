@@ -7,3 +7,8 @@ class LoadGallery extends ImageLabelEvent {
   @override
   List<Object> get props => [];
 }
+
+class LabelImage extends ImageLabelEvent {
+  @override
+  List<Object> get props => [];
+}

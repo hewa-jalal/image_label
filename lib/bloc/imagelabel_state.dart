@@ -13,5 +13,13 @@ class GalleryLoaded extends ImageLabelState {
 
   GalleryLoaded(this.thumbDataList);
   @override
-  List<Object> get props => [];
+  List<Object> get props => [thumbDataList];
+}
+
+class ImageLabeled extends ImageLabelState {
+  final String files;
+
+  ImageLabeled(this.files);
+  @override
+  List<Object> get props => [files];
 }
